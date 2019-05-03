@@ -285,7 +285,7 @@ lapply(h, function(x) x[1:8])
 
 ## Validating topic models {.smaller}
 
-```{r highlighted_vocab, cache = FALSE}
+```{r highlighted_vocab, eval = FALSE, cache = FALSE}
 html(p, height = "350px") %>% highlight(highlight = h)
 ```
 
@@ -626,7 +626,7 @@ make_igraph(400, afd_features) %>% gradget::as.dgr_graph() %>% render_graph()
 
 ## Graph visualisation (3D) {.smaller}
 
-```{r, eval = TRUE, echo = FALSE, cache = TRUE}
+```{r, eval = FALSE, echo = FALSE, cache = TRUE}
 widget_1_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_1.html"
 if (!file.exists(widget_1_file)){
   afd <- partition("MIGPARL", party = "AfD", interjection = FALSE)
@@ -647,12 +647,12 @@ if (!file.exists(widget_1_file)){
 }
 ```
 
-<iframe title="Koehler" width="100%"  src="./widget_1.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+<iframe title="widget1" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_1.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
 
 
 ## Graph visualisation (3D, anaglyph) {.smaller}
 
-```{r, eval = TRUE, echo = FALSE, message = FALSE, cache = TRUE}
+```{r, eval = FALSE, echo = FALSE, message = FALSE, cache = TRUE}
 widget_2_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_2.html"
 if (!file.exists(widget_2_file)){
   afd <- partition("MIGPARL", party = "AfD", interjection = FALSE)
@@ -673,12 +673,12 @@ if (!file.exists(widget_2_file)){
 }
 ```
 
-<iframe title="Koehler" width="100%"  src="./widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+<iframe title="widget2" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
 
 
 ## Graph visualisation (3D, filtered) {.smaller}
 
-```{r, echo = FALSE, message = FALSE, cache = TRUE}
+```{r, echo = FALSE, eval = FALSE, message = FALSE, cache = TRUE}
 widget_3_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_3.html"
 
 if (!file.exists(widget_3_file)){
@@ -709,7 +709,7 @@ if (!file.exists(widget_3_file)){
 }
 ```
 
-<iframe title="Koehler" width="100%"  src="./widget_3.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+<iframe title="widget3" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
 
 
 # Conclusions
