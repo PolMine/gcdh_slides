@@ -31,9 +31,7 @@ use("MigParl")
 ```
 
 
-# Towards Intersubjectivity
-
-## Research interests {.smaller}
+## Objectives {.smaller}
 
 - Substantive research interests
   - Broader question: Emergence of AfD as party and parliamentary presence - what are the effects on party competition and parliamentarism?
@@ -728,7 +726,7 @@ So these are the gradgets:
 
 The results of this research are very preliminary:
 
-- There is a (somewhat surprising) explicit politeness in the speeches of AfD speakers.
+- There is a (somewhat surprising) explicit politeness of AfD speakers.
 
 - There is no autism at all! But a lot of interaction with other parties (and visitors!).
 
