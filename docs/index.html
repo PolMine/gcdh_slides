@@ -1,5 +1,740 @@
-<html>
-<body>
-Hallo Welt!
-</body>
-</html>
+---
+title: "Graph Visualisation and Intersubjectivity"
+subtitle: 'Exploring the Parliamentary Discourse of the AfD'
+author: "Andreas Blaette"
+date: "February 27, 2019"
+output:
+  ioslides_presentation:
+    css: https://ablaette.github.io/gcdh_slides/css/stylesheet.css
+    logo: https://ablaette.github.io/gcdh_slides/img/polmine.png
+    widescreen: yes
+editor_options:
+  chunk_output_type: console
+---
+
+```{r load_packges, eval = TRUE, message = FALSE, echo = FALSE, warning = FALSE}
+library(magrittr)
+library(polmineR)
+library(svglite)
+library(DiagrammeR)
+library(DiagrammeRsvg)
+library(data.table)
+library(gradget) # https://github.com/PolMine/gradget
+library(igraph, warn.conflicts = FALSE)
+library(xts, quietly = TRUE, warn.conflicts = FALSE, verbose = FALSE) # plotting nice time-series
+library(DT) # nice datatable output
+library(RColorBrewer) # nice colors
+```
+
+```{r use_migparl, echo = FALSE, message = FALSE}
+use("MigParl")
+```
+
+
+# Towards Intersubjectivity
+
+## Research interests {.smaller}
+
+- Substantive research interests
+  - Broader question: Emergence of AfD as party and parliamentary presence - what are the effects on party competition and parliamentarism?
+  - Descriptive (preliminary) question: What are the prevalent framings in speeches given by AfD parliamentarians?
+  - Contagion hypothesis (diffusion): (Speakers of) other parliamentary groups may take over framings offered by AfD speakers.
+  - cp. DFG-Projekt "The populist challenge in parliament" (2019-2021, cooperation with Christian Strecker, Marcel Lewandowsky, Jochen Müller)
+
+- Methodological interests
+  - Validity and intersubjectivity of data-driven, "distant reading" approaches (in the eHumanities)
+  - ML/AI: Annotation to gain training data for statistical learning => gold standard annotation
+  - Social sciences: Traditions of coding and annotating text data: Quantitative/qualitative content analysis
+
+
+## Focus of the presentation {.smaller}
+
+- Combining distant and close reading is an unfulfilled promise: Software often inhibits combining both  perspectives. How to implement workflows for coding and annotating textual data? The *polmineR* R package is presented as potential solution.
+
+- Special focus: Interactive graph annotation as an approach to generate intersubjectively shared interpretations/understandings of discourse patterns. 
+  
+- Schedule:
+  - Theory is code
+  - The MigParl corpus
+  - AfD Keywords
+  - Graph annotation
+  - Conclusions
+
+
+# Theory is code {.inverse}
+
+##  Combining R and CWB | A design for close and distant reading {.smaller}
+
+- Why R?
+  - the most common programming language in the social sciences
+  - comprehensive availability of statistical methods
+  - great visualisation capabilites
+  - usability: RStudio as IDE
+  - reproducible research: Rmarkdown notebooks
+
+- Why the Corpus Workbench (CWB)?
+  - a classic toolset for corpus analysis
+  - indexing and compression of corpora => performance
+  - powerful and versatile syntax of the Corpus Query Processor (CQP)
+  - permissive license (GPL)
+
+- NoSQL / Lucene / Elasticsearch are potential alternatives - but not for now
+
+
+## The PolMine Project R Packages  {.smaller}
+
+**The core family of packages:**
+
+- *polmineR*: basic vocabulary for corpus analysis
+
+- *RcppCWB*: wrapper for the Corpus Workbench (using C++/Rcpp, follow-up on rcqp-package)
+
+- *cwbtools*: tools to create and manage CWB indexed corpora
+
+**And there are a few other packages:**
+
+- *GermaParl*: documents and disseminates GermaParl corpus
+- *frappp*: framework for parsing plenary protocols
+- *annolite*: light-weight fulltext display and annotation tool
+- *topicanalysis*: workflows with quantitative/qualitative elements for topic models
+- *gradget*: graph annotation widget
+
+
+## polmineR: Objectives
+
+* *performance*: if analysis is slow, interaction with the data will suffer
+
+* *portability*: painless installation on all major platforms
+
+* *open source*: no restrictions and inhibiting licenses
+
+* *usability*: make full use of the RStudio IDE
+
+* *documentation*: transparency of the methods implemented
+
+* *theory is code*: combine quantitative and qualitative methods
+
+
+## Getting started  {.smaller}
+
+- Getting started with polmineR is easy: Assuming that R and RStudio are installed, *polmineR* can be installed  as simple as follows (dependencies such as *RcppCWB* will be installed automatically). Type in an R session:
+
+```{r polmineR_installation, eval = FALSE, message = FALSE}
+install.packages("polmineR")
+```
+
+- Get the GermaParl corpus (corpus of plenary debates in the German Bundestag).
+
+```{r install_corpus, eval = FALSE}
+drat::addRepo("polmine") # add CRAN-style repository to known repos
+install.packages("GermaParl") # the downloaded package includes a small sample dataset
+GermaParl::germaparl_download_corpus() # get the full corpus
+```
+
+- That's it. Ready to go.
+
+```{r load_polmineR, eval = TRUE, message = FALSE}
+library(polmineR)
+use("GermaParl") # activate the corpora in the GermaParl package, i.e. GERMAPARL
+```
+
+
+## polmineR - the basic vocabulary
+
+One of the ideas of the *polmineR* package is to offer a set of intuitive verbs to implement common analytical tasks:
+
+- create subcorpora: *partition()*, *subset()*
+
+- counting: *hits()*, *count()*, *dispersion()* (vgl.: *size()*)
+
+- create term-document-matrices: *as.TermDocumentMatrix()*
+
+- get keywords / feature extraction: *features()*
+
+- compute cooccurrences: *cooccuurrences()*, *Cooccurrences()*
+
+- inspect concordances: *kwic()*
+
+- recover full text: *get_token_stream()*, *html()*, *read()*
+
+
+## Metadata and partitions/subcorpora {.smaller}
+
+- This is the "good old" workflow to create partitions (i.e. subcorpora):
+
+```{r, cache = TRUE, message = FALSE, cache = TRUE}
+p <- partition("GERMAPARL", year = 2001)
+m <- partition("GERMAPARL", speaker = "Merkel", regex = TRUE)
+```
+
+- And there is an emerging new workflow ...
+
+```{r subcorpus, cache = TRUE}
+am <- corpus("GERMAPARL") %>% subset(speaker == "Angela Merkel")
+
+m <- corpus("GERMAPARL") %>% subset(grep("Merkel", speaker)) # Petra Merkel!
+
+cdu_csu <- corpus("GERMAPARL") %>%
+  subset(party %in% c("CDU", "CSU")) %>%
+  subset(role != "presidency")
+```
+
+- You might read the code aloud as follows: "We generate a subcorpus X by taking the corpus GERMAPARL, subsetting it based on criterion Y, ..."
+
+## Counting and dispersions {.smaller}
+
+```{r dispersion, cache = TRUE}
+dt <- dispersion("GERMAPARL", query = "Flüchtlinge", s_attribute = "year")
+barplot(height = dt$count, names.arg = dt$year, las = 2, ylab = "Häufigkeit")
+```
+
+
+## Concordances / KWIC output {.smaller}
+
+```{r set_pagelength, echo = FALSE, cache = FALSE}
+options("polmineR.pagelength" = 5L)
+```
+
+```{r kwic, eval = TRUE, render = knit_print, message = TRUE, cache = FALSE}
+q <- '[pos = "NN"] "mit" "Migrationshintergrund"'
+corpus("GERMAPARL") %>% kwic(query = q, cqp = TRUE, left = 10, right = 10)
+```  
+
+
+## Validating sentiment analaysis {.smaller}
+
+```{r get_senti_ws, eval = TRUE, message = FALSE, echo = FALSE}
+gist_url <- "https://gist.githubusercontent.com/PolMine/70eeb095328070c18bd00ee087272adf/raw/c2eee2f48b11e6d893c19089b444f25b452d2adb/sentiws.R"
+devtools::source_url(gist_url) # danach ist Funktion verfügbar
+SentiWS <- get_sentiws()
+
+good <- SentiWS[weight > 0][["word"]]
+bad <- SentiWS[weight < 0][["word"]]
+
+options("polmineR.pagelength" = 4L)
+options("polmineR.left" = 10L)
+options("polmineR.right" = 10L)
+```
+
+```{r activate_germaparl, eval = TRUE, echo = FALSE, message = FALSE, cache = FALSE}
+use("GermaParl")
+```
+
+```{r show_sentiment_vovab, render = knit_print, eval = TRUE, message = FALSE, echo = TRUE, cache = FALSE}
+kwic("GERMAPARL", query = "Islam", positivelist = c(good, bad)) %>%
+  highlight(lightgreen = good, orange = bad) %>%
+  tooltips(setNames(SentiWS[["word"]], SentiWS[["weight"]])) %>%
+  knit_print()
+```
+
+
+## Full text output {.smaller}
+
+- This is how you can recover the fulltext of a subcorpus.
+
+```{r fulltext, eval = FALSE, cache = TRUE, message = FALSE}
+corpus("GERMAPARL") %>% # take the GERMAPARL corpus
+  subset(date == "2009-11-10") %>% # create a subcorpus based on a date
+  subset(speaker == "Merkel") %>% # get me the speech given by Merkel
+  html(height = "250px") %>% # turn it into html
+  highlight(list(yellow = c("Bundestag", "Regierung"))) # and highlight words of interest
+```
+
+- Inspecting the fulltext can be extremely useful to evaluate topic models: This is how you would highlight the most likely terms of a topicmodel using polmineR:
+
+```{r show_topic_vocab, eval = FALSE, echo = TRUE, message = FALSE}
+h <- get_highlight_list(BE_lda, partition_obj = ek, no_token = 150)
+h <- lapply(h, function(x) x[1:8])
+
+corpus("BE") %>%
+  subset(date == "2005-04-28") %>%
+  subset(grepl("Körting", speaker)) %>% 
+  as.speeches(s_attribute_name = "speaker", verbose = FALSE)[[4]] %>% 
+  html(height = "350px") %>%
+  highlight(highlight = h)
+```
+
+
+# Data
+
+## The MigParl Corpus {.smaller}
+
+- The following analysis is based on the MigTex corpus.
+
+```{r activate_migparl, eval = FALSE, echo = FALSE, message = FALSE}
+use("MigParl")
+```
+
+- The corpus has been prepared in the MigTex Project ("Textressourcen für die Migrations- und Integrationsforschung", funding: BMFSFJ)
+
+- Preparation of all plenary debates in Germany's regional parliaments (2000-2018) using the "Framework for Parsing Plenary Protocols" (*frappp*-package)
+
+- Extraction of a thematic subcorpus using unsupervised learning (topic modelling)
+
+- Size of the MigParl corpus: `r size("MIGPARL")` tokens
+
+- size without interjections and presidency: `r size("MIGPARL") - size(partition("MIGPARL", interjection = TRUE)) - size(partition("MIGPARL", role = "presidency"))`
+
+- structural annotation: `r paste(s_attributes("MIGPARL"), collapse = " | ")`
+
+As announced initially, our analytical concern is speeches given by AfD parliamentarians.
+
+
+## MigParl by year {.flexbox .vcenter}
+
+```{r token_by_year, echo = FALSE, message = FALSE, cache = TRUE}
+size_year <- size("MIGPARL", "year")
+barplot(
+  height = size_year[["size"]] / 100000,
+  names.arg = size_year[["year"]],
+  ylab = "#tokens (100 000)",
+  xlab = "year",
+  las = 2
+)
+```
+
+
+## AfD in MigParl - tokens {.flexbox .vcenter}
+
+```{r token_afd, echo = FALSE, message = FALSE, cache = TRUE}
+afd <- corpus("MIGPARL") %>% subset(party == "AfD") %>% subset(interjection == FALSE)
+afd_year <- size(afd, "year")
+barplot(
+  height = afd_year[["size"]] / 100000,
+  names.arg = afd_year[["year"]],
+  ylab = "#tokens (100 000)",
+  xlab = "Year",
+  las = 2
+)
+```
+
+
+## AfD in MigParl - share {.flexbox .vcenter}
+
+```{r share_afd, echo = FALSE, message = FALSE, cache = TRUE}
+all_year <- size("MIGPARL", s_attribute = "year")[, "what" := "all"]
+afd <- subset("MIGPARL", party == "AfD" & interjection == FALSE)
+afd_year <- size(afd, "year")[, "what" := "AfD"]
+dt <- rbindlist(list(all_year, afd_year))
+dt_share <- dcast(data = dt, year ~ what, value.var = "size")
+dt_share[, "year" := as.integer(year)]
+dt_share[, "AfD" := ifelse(is.na(AfD), 0, AfD)]
+dt_share[, "afd_share" := round((AfD / all) * 100, 2)]
+dt_share_min <- dt_share[year > 2010]
+barplot(
+  height = dt_share_min[["afd_share"]],
+  names.arg = dt_share_min[["year"]],
+  ylab = "AfD share (percent)",
+  xlab = "Year",
+  las = 2,
+  col = "steelblue"
+)
+```
+
+
+## MigParl - regional dispersion {.flexbox .vcenter}
+
+```{r afd_geography, message = FALSE, echo = FALSE, cache = TRUE}
+dt <- corpus("MIGPARL") %>%
+  subset(party == "AfD") %>%#
+  subset(interjection == FALSE) %>%
+  size(afd, s_attribute = "regional_state")
+setorderv(dt, cols = "size", order = -1L)
+barplot(
+  height = dt$size,
+  names.arg = dt$regional_state,
+  las = 2,
+  col = "steelblue",
+  ylab = "Number of tokens",
+  xlab = "Regional parliament"
+)
+```
+
+## So what's in the data?
+
+* There is an (unsurprising) peak of debates on migration and integration affairs in 2015.
+
+* The total number of words spoken by AfD parliamentarians and the relative share has increased, as the AfD made it into an increasing number of regional parliaments.
+
+* The AfD presence is stronger in the Eastern regional states, corresponding to stronger electoral results there. 
+
+
+# AfD Keywords
+
+## Term extraction explained
+
+* To gain a first insight into the thematic foci and linguistic features of AfD speakers, we use the technique of term extraction.
+
+* The fundamental idea is to identify terms that occurr more often in a corpus of interest compared to a reference corpus than would be expected by chance. The statistical test used is a chisquare-test.
+
+* To exemplify the flexibility of polmineR, we move beyond the analysis of single words, and inspect 2- and 3-grams, considering particularly interesting sequences of part-of-speech-tags.
+
+* What we may learn from the following three tables is that assumed features of populist style remain present when the AfD arrived in parliament: Foreigners and asylum-seekers are an object of concern (using pejorative language), and we see vocabulary that indicates the critique of established parties and elites.
+
+
+## Term extraction I {.smaller}
+
+```{r features_word_pos, eval = TRUE, message = FALSE, echo = FALSE, warning = FALSE, cache = FALSE}
+afd_count <- corpus("MIGPARL") %>%
+  subset(party == "AfD" & interjection == FALSE) %>%
+  count(p_attribute = c("word", "pos"))
+all_count <- corpus("MIGPARL") %>%
+  subset(interjection = FALSE) %>%
+  count(p_attribute = c("word", "pos"))
+a <- features(x = afd_count, y = all_count, included = TRUE) %>%
+  subset(count_coi >= 5) %>%
+  subset(chisquare >= 11.83)
+DT::datatable(format(a))
+```
+
+
+## Term extraction II (ADJA - NN){.smaller}
+
+```{r ngrams_ART_NN, eval = TRUE, message = FALSE, echo = FALSE, warning = FALSE, cache = FALSE}
+afd_ngrams <- corpus("MIGPARL") %>%
+  subset(party == "AfD") %>%
+  subset(interjection == FALSE) %>%
+  ngrams(n = 2, c("word", "pos"))
+all_ngrams <- corpus("MIGPARL") %>%
+  subset(interjection = FALSE) %>%
+  ngrams(n = 2, p_attribute = c("word", "pos"))
+
+a <- features(x = afd_ngrams, y = all_ngrams, included = TRUE) %>%
+  subset(count_coi >= 5) %>%
+  subset(chisquare >= 11.83)
+
+b <- subset(a, a@stat[["1_pos"]] == "ADJA")
+b <- subset(b, b@stat[["2_pos"]] == "NN")
+b <- subset(b, !b@stat[["2_word"]] %in% c("Kollegen", "Damen", "Präsidium", "Herr", "Besucher", "Abgeordnete", "Frau", "Gäste", "Zuschauer"))
+b <- subset(b, !b@stat[["1_word"]] == "``")
+b <- subset(b, !b@stat[["2_word"]] == "``")
+dt <- b@stat[, "1_pos" := NULL][, "2_pos" := NULL][, "exp_coi" := NULL][, "rank_chisquare" := NULL]
+dt[, "chisquare" := round(chisquare, 2)]
+DT::datatable(dt)
+```
+
+
+## Term extraction III (NN-ART-NN) {.smaller}
+
+```{r ngrams_nn_art_nn, eval = TRUE, message = FALSE, echo = FALSE, warning = FALSE, cache = FALSE}
+afd_ngrams <- corpus("MIGPARL") %>% 
+  subset(party == "AfD") %>%
+  subset(interjection == FALSE) %>%
+  ngrams(n = 3L, c("word", "pos"))
+all_ngrams <- corpus("MIGPARL") %>%
+  subset(interjection == FALSE) %>%
+  ngrams(n = 3, p_attribute = c("word", "pos"))
+
+a <- features(x = afd_ngrams, y = all_ngrams, included = TRUE) %>%
+  subset(count_coi >= 5) %>%
+  subset(chisquare >= 11.83)
+
+b <- subset(a, a@stat[["1_pos"]] == "NN")
+b <- subset(b, b@stat[["2_pos"]] == "ART")
+b <- subset(b, b@stat[["3_pos"]] == "NN")
+b <- subset(b, !b@stat[["1_word"]] == "%")
+
+b@stat[, "1_pos" := NULL][, "2_pos" := NULL][, "3_pos" := NULL][, "rank_chisquare" := NULL]
+b@stat[, "chisquare" := round(chisquare, 2)]
+b@stat[, "exp_coi" := round(exp_coi, 2)]
+DT::datatable(b@stat)
+```
+
+
+# Graph Annotation {.inverse}
+
+## The elusive merit of cooccurrence graphs
+
+* Cooccurrence graphs are an eye-catcher and have become a popular analytical approach in the eHumanities (see the following examples).
+
+* The visualisations are very suggestive and seem to be a great condensation of ideas we have about discourse.
+
+* But are these interpretations sound and do they meet standards of intersubjectivity? 
+
+* To start will, I will indicate that there are many choices behind these visualisations that can be contested.
+
+* The solution I suggest is to work with three-dimensional, interactive graph visualisations that can be annotated (called gradgets, for graph annotation widgets). 
+
+
+## Ego-Networks | Leipzig Corpus Miner (LCM) {.vcenter}
+
+<img src="https://ablaette.github.io/gcdh_slides/img/maas_kind.png" height = "50%" width = "50%"/>
+
+
+## "Wuchern der Rhizome" | (Joachim Scharloth) {.vcenter}
+
+<img src="https://ablaette.github.io/gcdh_slides/img/wuchern_rhizome.png" height = "75%" width = "75%"/>
+
+<br/>
+
+
+## polmineR & cooccurrences {.smaller}
+
+- The *polmineR* package offers the functionality to get the cooccurrences for a specific query of interest. The default method for calculating cooccurrences is the loglikelihood test.
+
+```{r, echo = FALSE, cache = TRUE}
+options("polmineR.pagelength" = 5L)
+```
+
+- The `cooccurrences()`-method can be applied to subcorpora / partitions, and corpora.
+
+```{r coocs1, render = knit_print, cache = FALSE}
+cooccurrences("GERMAPARL", query = 'Islam', left = 10, right = 10)
+```
+
+
+## Getting all cooccurrences {.smaller}
+
+Starting with polmineR v0.7.9.11, the package includes a method to efficiently calculate all cooccurrences in a corpus.
+
+```{r merkel, message = FALSE, eval = TRUE, cache = TRUE}
+m <- partition("GERMAPARL", year = 2008, speaker = "Angela Merkel", interjection = F)
+drop <- terms(m, p_attribute = "word") %>% noise() %>% unlist()
+Cooccurrences(m, p_attribute = "word", left = 5L, right = 5L, stoplist = drop) %>% 
+  decode() %>% # 
+  ll() %>%
+  subset(ll >= 10.83) %>%
+  subset(ab_count >= 5) -> coocs
+```
+
+
+
+## AfD Cooccurrences {.smaller}
+
+```{r migparl_noise, message = FALSE, echo = FALSE, eval = TRUE, cache = TRUE, warning = FALSE}
+big_stopwords <- paste(
+  toupper(substr(tm::stopwords("de"), 1,1)),
+  substr(tm::stopwords("de"), 2, length(tm::stopwords("de"))),
+  sep = ""
+)
+
+migparl_noise <- terms("MIGPARL", p_attribute = "word") %>%
+  noise() %>%
+  unlist() %>%
+  c(big_stopwords, "dass") %>%
+  unique()
+```
+
+
+```{r afd_cooccurrences, message = FALSE, echo = FALSE, eval = TRUE, warning = FALSE}
+afd_rds_file <- path.expand("~/Lab/github/gcdh_slides/data/afd_cooc.rds")
+if (!file.exists(afd_rds_file)){
+  afd_cooc <- partition("MIGPARL", party = "AfD", interjection = FALSE) %>%
+    Cooccurrences(
+      left = 10L, right = 10L,
+      p_attribute = "word", stoplist = migparl_noise, verbose = TRUE, progress = TRUE
+      ) %>%
+    ll() %>%
+    decode()
+  afd_cooc <- subset(afd_cooc, ab_count >= 5) %>% subset(ll >= 10.83)
+  saveRDS(object = afd_cooc, file = afd_rds_file)
+} else {
+  afd_cooc <- readRDS(afd_rds_file)
+}
+```
+
+
+```{r ref_cooccurrences, echo = FALSE, message = FALSE, warning = FALSE}
+rds_file <- path.expand("~/Lab/github/gcdh_slides/data/afd_cooc_features.rds")
+
+if (!file.exists(rds_file)){
+  all_cooc <- partition("MIGPARL", interjection = FALSE) %>%
+    Cooccurrences(left = 10L, right = 10L, p_attribute = "word", stoplist = migparl_noise, verbose = TRUE) %>%
+    ll() %>%
+    subset(ll >= 10.83) %>%
+    subset(ab_count >= 5) %>%
+    decode()
+  
+  afd_features <- features(afd_cooc, all_cooc, included = TRUE)
+  afd_features@stat <- afd_features@stat[1L:2500L]
+  saveRDS(object = afd_features, file= rds_file)
+} else {
+  afd_features <- readRDS(file = rds_file)
+}
+```
+
+```{r cooc_all, echo = FALSE, message = FALSE, warning = FALSE, render = knit_print}  
+afd_cooc@p_attribute <- "word"
+afd_features@p_attribute <- "word"
+afd_features@stat <- afd_features@stat[1:150]
+afd_min <- subset(afd_cooc, by = afd_features)
+dt <- copy(afd_min@stat)
+dt[, "a_id" := NULL][, "b_id" := NULL][, "size_window" := NULL]
+dt[, "i.exp_coi" := NULL][, "i.exp_ref" := NULL][, "i.ll" := NULL][, "i.rank_ll" := NULL]
+dt[, "rank_ll" := NULL][, "exp_ref" := NULL]
+dt[, "ll" := round(ll, 2)]
+dt[, "count_coi" := NULL][, "count_ref" := NULL][, "exp_coi" := NULL]
+setcolorder(x = dt, neworder = c("a_word", "b_word", "ab_count", "a_count", "b_count", "ll"))
+setorderv(dt, cols = "ll", order = -1L)
+DT::datatable(dt)
+```  
+
+
+## Graph visualisation (2D, N = 100) {.smaller}
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+make_igraph <- function(n, afd_features){
+  afd_features@stat <- afd_features@stat[1:n]
+  G <- subset(afd_cooc, by = afd_features) %>%
+    as_igraph() %>%
+    igraph_add_coordinates(layout = "kamada.kawai", dim = 2) %>%
+    igraph_add_communities() %>% 
+    rescale(-250, 250)
+  
+  ll <- unlist(sapply(E(G)$ll, function(x) x[1]))
+  G <- igraph::delete_edge_attr(G, name = "ll")
+  E(G)$ll <- ll
+  G
+}
+```
+
+```{r, eval = TRUE, echo = FALSE, message = FALSE, warning = FALSE}
+afd_features <- readRDS(file = rds_file)
+make_igraph(150, afd_features) %>%
+  gradget::as.dgr_graph() %>%
+  render_graph()
+# %>%
+#   DiagrammeRsvg::export_svg() %>%
+#  svgPanZoom::svgPanZoom(width = "100%", height = "75%")
+```
+
+
+## Graph-Visualisierung (2D, N = 250) {.smaller}
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+make_igraph(250, afd_features) %>% gradget::as.dgr_graph() %>% render_graph()
+```
+
+
+## Graph-Visualisierung (2D, N = 400) {.smaller}
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+make_igraph(400, afd_features) %>% gradget::as.dgr_graph() %>% render_graph()
+```
+
+
+## Where we stand
+
+- The graph layout depends heavily on filter decisions.
+
+- Filtering is necessary, but there are difficulties to justify filter decisions.
+
+- Graph visualisation implies many possibilities to provide extra information, but there are perils of information overload.
+
+- If we try to omit filter decisions, we run into the problem of overwhelming complexity of large graphs.
+
+- How to handle the complexity and create the foundations for intersubjectivity? 
+
+
+## Graph visualisation (3D) {.smaller}
+
+```{r, eval = FALSE, echo = FALSE, cache = TRUE}
+widget_1_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_1.html"
+if (!file.exists(widget_1_file)){
+  afd <- partition("MIGPARL", party = "AfD", interjection = FALSE)
+  afd_features@stat <- afd_features@stat[1:400]
+  afd_features_min <- subset(afd_cooc, by = afd_features)
+  afd_features_min@stat <- afd_features_min@stat[!is.na(ll)]
+  afd_features_min %>%
+    as_igraph() %>%
+    igraph_add_coordinates(layout = "kamada.kawai", dim = 3) %>%
+    igraph_add_communities() %>% 
+    rescale(-250, 250) %>%
+    igraph_add_kwic(subcorpus = afd) %>%
+    igraph_as_gradget_data() -> gr_dat
+  
+  widget <- gradget(gr_dat, anaglyph = FALSE)
+  
+  htmlwidgets::saveWidget(widget = widget, file = widget_1_file)
+}
+```
+
+
+```{r, eval = FALSE, echo = FALSE, message = FALSE, cache = TRUE}
+widget_2_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_2.html"
+if (!file.exists(widget_2_file)){
+  afd <- partition("MIGPARL", party = "AfD", interjection = FALSE)
+  
+  afd_features@stat <- afd_features@stat[1:400]
+  afd_features@stat <- afd_features@stat[!is.na(ll)]
+  gr_dat <- subset(afd_cooc, by = afd_features) %>%
+    as_igraph() %>%
+    igraph_add_coordinates(layout = "kamada.kawai", dim = 3) %>%
+    igraph_add_communities() %>% 
+    rescale(-250, 250) %>%
+    igraph_add_kwic(subcorpus = afd) %>%
+    igraph_as_gradget_data()
+  
+  widget <- gradget(gr_dat, anaglyph = TRUE)
+  
+  htmlwidgets::saveWidget(widget = widget, file = widget_2_file)
+}
+
+# <iframe title="widget2" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+
+```
+
+
+```{r, echo = FALSE, eval = FALSE, message = FALSE, cache = TRUE}
+widget_3_file <- "/Users/andreasblaette/Lab/gitlab/gradget_slides/widget_3.html"
+
+if (!file.exists(widget_3_file)){
+  afd_cooc <- readRDS("/Users/andreasblaette/Lab/gitlab/gradget_slides/data/afd_cooc.rds")
+  afd_features <- readRDS("/Users/andreasblaette/Lab/gitlab/gradget_slides/data/afd_cooc_features.rds")
+  
+  afd_features@stat <- afd_features@stat[1:400]
+  afd_features@stat <- afd_features@stat[!is.na(ll)]
+  g <- subset(afd_cooc, by = afd_features) %>%
+    as_igraph() %>%
+    simplify()
+  
+  bs <- g %>% cohesive_blocks() %>% blocks()
+  
+  g_min <- induced_subgraph(g, v = bs[[order(sapply(bs, length), decreasing = TRUE)[2]]])
+  
+  g_min_fin <- g_min %>%
+    igraph_add_coordinates(layout = "kamada.kawai", dim = 3) %>%
+    igraph_add_communities() %>% 
+    rescale(-250, 250) %>%
+    igraph_add_kwic(subcorpus = partition("MIGPARL", party = "AfD", interjection = FALSE))
+  
+  
+  widget <- igraph_as_gradget_data(g_min_fin) %>%
+    gradget(anaglyph = FALSE)
+  
+  htmlwidgets::saveWidget(widget = widget, file = widget_3_file)
+}
+# <iframe title="widget3" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+
+```
+
+So 'gradgets' are the solution suggested here.  The links to the following three gradgets offer a visualisation that is interactive in a double sense:
+
+(a) You can turn the visualisation in three-dimensional space
+(b) You can click on the edges and nodes, get the concordances that are behind the statistical evaluation, and leave an annotation.
+
+In a real-world workflow, the result of the graph annotation exercise can be stored and put into an online appendix to a publication that explains interpretative results.
+
+So these are the gradgets:
+
+* [threedimensional gradget I](https://ablaette.github.io/gcdh_slides/widget_1.html)
+* [threedimensional, anaglyph gradget II](https://ablaette.github.io/gcdh_slides/widget_2.html)
+* [threedimensional, anaglyph gradget III (restrictive filtering)](https://ablaette.github.io/gcdh_slides/widget_3.html)
+
+
+# Conclusions
+
+## Conclusions
+
+The results of this research are very preliminary:
+
+- There is a (somewhat surprising) explicit politeness in the speeches of AfD speakers.
+
+- There is no autism at all! But a lot of interaction with other parties (and visitors!).
+
+- There are antagonismus: "Wir" (AfD / AfD-Fraktion) and the others.
+
+- It's the economy: Introducing a redistributive Logic as a leitmotiv.
+
+But in a way, AfD speeches served only as a case how we might develop the idea of "visual hermeneutics" (Gary Schaal): If we decide to work with cooccurrence graphs, graph annotation is the approach suggested here to realise the idea of distant and close reading, and to achieve intersubjectivity.
+
