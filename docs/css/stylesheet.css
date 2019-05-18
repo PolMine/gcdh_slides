@@ -16,10 +16,6 @@ slides > slide:not(.nobackground):before {
   background-size: 125px 41px;
 }
 
-slides > slide.backdrop {
-  background: white;
-}
-
 .inverse {
   background-color: #272822;
   color: #d6d6d6;

@@ -1,0 +1,13 @@
+base
+magrittr
+polmineR
+svglite
+DiagrammeR
+DiagrammeRsvg
+data.table
+gradget
+igraph
+zoo
+xts
+DT
+RColorBrewer
