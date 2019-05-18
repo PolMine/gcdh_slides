@@ -444,7 +444,7 @@ DT::datatable(b@stat)
 
 ## The elusive merit of cooccurrence graphs
 
-* Cooccurrence graphs are an eye-catcher and have become a popular analytical approach in the eHumanities (see the following examples).
+* Cooccurrence graphs are an eye-catcher and have become a popular analytical approach in the eHumanities [@Rhizome2013; @2016TMid].
 
 * The visualisations are very suggestive and seem to be a great condensation of ideas we have about discourse.
 
@@ -453,22 +453,6 @@ DT::datatable(b@stat)
 * To start will, I will indicate that there are many choices behind these visualisations that can be contested.
 
 * The solution I suggest is to work with three-dimensional, interactive graph visualisations that can be annotated (called gradgets, for graph annotation widgets). 
-
-
-## Ego-Networks | Leipzig Corpus Miner (LCM) {.flexbox .vcenter}
-
-<img src="https://ablaette.github.io/gcdh_slides/img/maas_kind.png" height = "50%" width = "50%"/>
-
-[@2016TMid, p. 248]
-
-
-## "Wuchern der Rhizome" | (Joachim Scharloth) {.flexbox .vcenter}
-
-<img src="https://ablaette.github.io/gcdh_slides/img/wuchern_rhizome.png" height = "75%" width = "75%"/>
-
-[@Rhizome2013]
-
-<br/>
 
 
 ## polmineR & cooccurrences {.smaller}
