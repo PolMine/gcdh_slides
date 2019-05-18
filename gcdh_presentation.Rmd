@@ -45,7 +45,7 @@ use("MigParl")
   - Broader question: Emergence of AfD as party and parliamentary presence - what are the effects on party competition and parliamentarism?
   - Descriptive (preliminary) question: What are the prevalent framings in speeches given by AfD parliamentarians?
   - Contagion hypothesis (diffusion): (Speakers of) other parliamentary groups may take over framings offered by AfD speakers.
-  - cp. DFG-Projekt (2019-2021): "The populist challenge in parliament" (in cooperation with Christian Strecker, Marcel Lewandowsky, Jochen Müller)
+  - cp. DFG project "The populist challenge in parliament" (2019-2021, in cooperation with Christian Stecker, Marcel Lewandowsky, Jochen Müller)
 
 - Methodological interests
   - Validity and intersubjectivity of data-driven, distant reading approaches (in the eHumanities)
@@ -74,9 +74,9 @@ use("MigParl")
 - Why R?
   - the most common programming language in the social sciences
   - comprehensive availability of statistical methods
-  - great visualisation capabilites
+  - great visualisation capabilities
   - usability: RStudio as IDE
-  - reproducible research: Rmarkdown notebooks
+  - reproducible research: R Markdown notebooks
 
 - Why the Corpus Workbench (CWB)?
   - a classic toolset for corpus analysis
@@ -102,8 +102,8 @@ Beyond the triple:
 
 - *GermaParl*: documents and disseminates GermaParl corpus
 - *frappp*: framework for parsing plenary protocols
-- *annolite*: light-weight fulltext display and annotation tool
-- *topicanalysis*: Integration von quantitativer/qualitativer Arbeit mit Topic-Modellen
+- *annolite*: light-weight full text display and annotation tool
+- *topicanalysis*: integrate quantitative/qualitative approaches to topic models
 - *gradget*: graph annotation widget
 
 
@@ -150,7 +150,7 @@ use("GermaParl")
 
 - subcorpora: *partition()*, *subset()*
 
-- counting: *hits()*, *count()*, *dispersion()* (vgl.: *size()*)
+- counting: *hits()*, *count()*, *dispersion()* (see *size()*)
 
 - term-document-matrices: *as.TermDocumentMatrix()*
 
@@ -712,9 +712,9 @@ if (!file.exists(widget_3_file)){
 
 - no autism? Interaction with other parties (and visitors!)
 
-- Cultivating antagonismus: "Wir" (AfD / AfD-Fraktion) and the others
+- Cultivating antagonisms: "Wir" (AfD / AfD-Fraktion) and the others
 
-- It's the economy: Introducing a redistributive Logic as a leitmotiv
+- It's the economy: Introducing a redistributive logic as a leitmotiv
 
 - "visual hermeneutics" (G. Schaal) - graph annotation as an approach to realise ideal of distant and close reading
 
