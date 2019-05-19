@@ -5,8 +5,8 @@ author: "Andreas Blaette"
 date: "February 27, 2019"
 output:
   ioslides_presentation:
-    css: https://ablaette.github.io/gcdh_slides/css/stylesheet.css
-    logo: https://ablaette.github.io/gcdh_slides/img/polmine.png
+    css: https://polmine.github.io/gcdh_slides/css/stylesheet.css
+    logo: https://polmine.github.io/gcdh_slides/img/polmine.png
     widescreen: yes
 editor_options:
   chunk_output_type: console
@@ -58,6 +58,20 @@ use("MigParl")
   - AfD Keywords
   - Graph annotation
   - Conclusions
+
+
+## Technical remarks {.smaller}
+
+- These slides are an [ioslides presentation created using R Markdown](https://bookdown.org/yihui/rmarkdown/ioslides-presentation.html). The following single character keyboard shortcuts are active and enable alternate display modes:
+    - 'f': enable fullscreen mode (note that slides are optimized for fullscreen mode)
+    - 'w': toggle widescreen mode (not recommended)
+    - 'o': enable overview mode
+    
+- Appearence may differ slightly between browsers (Firefox / Safari / Chrome).
+
+- The code for generating the slides is available at a [GitHub repository](https://github.com/PolMine/gcdh_slides), as we try to follow the ideal of reproducible research.
+
+- The GitHub repo has a DOI (from zenodo): 10.5281/zenodo.2949021
 
 
 # Theory is code {.inverse}
@@ -472,7 +486,7 @@ cooccurrences("GERMAPARL", query = 'Islam', left = 10, right = 10)
 
 ## Getting all cooccurrences {.smaller}
 
-Starting with polmineR v0.7.9.11, the package includes a method to efficiently calculate all cooccurrences in a corpus.
+* Starting with polmineR v0.7.9.11, the package includes a method to efficiently calculate all cooccurrences in a corpus. Doing this for a GERMAPARL would be as simple as follows.
 
 ```{r merkel, message = FALSE, eval = TRUE, cache = TRUE}
 m <- partition("GERMAPARL", year = 2008, speaker = "Angela Merkel", interjection = F)
@@ -484,6 +498,11 @@ Cooccurrences(m, p_attribute = "word", left = 5L, right = 5L, stoplist = drop) %
   subset(ab_count >= 5) -> coocs
 ```
 
+* Our objective is to obtain the significant cooccurrences of the AfD in parliamentary discourse: We are not just interested in all statistically significant cooccurrences, but more specifically in those that distinguish AfD speech-making from speeches made by parliamentarians of other factions. 
+
+* Accordingly, we get the relevant AfD cooccurrences by way of a difference test (chi-squared statistic) with cooccurrences in speeches by all other parliamentarians. See the [code for these slides](https://github.com/PolMine/gcdh_slides) to learn how this is implemented in polmineR.
+
+* An analoguous approach to get significant cooccurrences is implemented in the [CorporaCoCo R package](https://CRAN.R-project.org/package=CorporaCoCo) [@CorporaCoCo2017], see also [this research note on co-occurrence comparison techniques](https://www.birmingham.ac.uk/Documents/college-artslaw/corpus/conference-archives/2017/general/paper362.pdf).
 
 
 ## AfD Cooccurrences {.smaller}
@@ -657,7 +676,7 @@ if (!file.exists(widget_2_file)){
   htmlwidgets::saveWidget(widget = widget, file = widget_2_file)
 }
 
-# <iframe title="widget2" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+# <iframe title="widget2" width="100%"  src="https://polmine.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
 
 ```
 
@@ -691,7 +710,7 @@ if (!file.exists(widget_3_file)){
   
   htmlwidgets::saveWidget(widget = widget, file = widget_3_file)
 }
-# <iframe title="widget3" width="100%"  src="https://ablaette.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
+# <iframe title="widget3" width="100%"  src="https://polmine.github.io/gcdh_slides/widget_2.html" frameborder="0" scrolling="no" onload="resizeIframe(this)" padding="0em !important" margin-left="0 !important"></iframe>
 
 ```
 
@@ -704,28 +723,28 @@ In a real-world workflow, the result of the graph annotation exercise can be sto
 
 So these are the gradgets:
 
-* [threedimensional gradget I](https://ablaette.github.io/gcdh_slides/widget_1.html)
-* [threedimensional, anaglyph gradget II](https://ablaette.github.io/gcdh_slides/widget_2.html)
-* [threedimensional, anaglyph gradget III (restrictive filtering)](https://ablaette.github.io/gcdh_slides/widget_3.html)
+* [threedimensional gradget I](https://polmine.github.io/gcdh_slides/widget_1.html)
+* [threedimensional, anaglyph gradget II](https://polmine.github.io/gcdh_slides/widget_2.html)
+* [threedimensional, anaglyph gradget III (restrictive filtering)](https://polmine.github.io/gcdh_slides/widget_3.html)
 
 
 # Conclusions
 
-## Conclusions
+## Conclusions {.smaller}
 
 The results of this research are very preliminary:
 
 - There is a (somewhat surprising) explicit politeness of AfD speakers.
 
-- It's the economy: Introducing a redistributive logic as a leitmotiv
+- It's the economy: Introducing a redistributive logic as a leitmotiv.
 
 - There is no autism at all! But a lot of interaction with other parties (and visitors!).
 
-- Cultivating antagonisms: "Wir" (AfD / AfD-Fraktion) and the others
+- Cultivating antagonisms: "Wir" (AfD / AfD-Fraktion) and the others.
 
 - It's the economy: Introducing a redistributive logic as a leitmotiv.
 
-But in a way, AfD speeches served only as a case how we might develop the idea of "visual hermeneutics" (Gary Schaal): If we decide to work with cooccurrence graphs, graph annotation is the approach suggested here to realise the idea of distant and close reading, and to achieve intersubjectivity.
+But in a way, AfD speeches served only as a case how we might develop the idea of "visual hermeneutics" [@Schaal2016]: If we decide to work with cooccurrence graphs, graph annotation is the approach suggested here to realise the idea of distant and close reading, and to achieve intersubjectivity.
 
 
 ## References {.smaller}
